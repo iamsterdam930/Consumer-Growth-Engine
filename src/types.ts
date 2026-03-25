@@ -43,6 +43,15 @@ export interface Strategy {
   }[];
 }
 
+export interface Audience {
+  id: string;
+  name: string;
+  description: string;
+  count: number;
+  updateTime: string;
+  status: string;
+}
+
 export type ViewState = 
   | 'dashboard' 
   | 'campaign-list'
@@ -52,4 +61,6 @@ export type ViewState =
   | 'strategy-review' 
   | 'adhoc-brief' 
   | 'execution-running' 
-  | 'execution-report';
+  | 'execution-report'
+  | 'audience-list'
+  | 'smart-audience-assistant';

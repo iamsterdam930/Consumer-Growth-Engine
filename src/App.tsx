@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ViewState, Strategy } from './types';
+import { useState, useEffect } from 'react';
+import { ViewState, Strategy, Audience } from './types';
 import Dashboard from './components/Dashboard';
 import LifecycleSelection from './components/LifecycleSelection';
 import LifecycleBrief from './components/LifecycleBrief';
@@ -9,7 +9,9 @@ import AdhocBrief from './components/AdhocBrief';
 import ExecutionDashboard from './components/ExecutionDashboard';
 import ReportDashboard from './components/ReportDashboard';
 import CampaignList from './components/CampaignList';
-import { Bot, Settings, HelpCircle, LayoutDashboard, ListTodo, ChevronLeft, ChevronRight } from 'lucide-react';
+import AudienceList from './components/AudienceList';
+import SmartAudienceAssistant from './components/SmartAudienceAssistant';
+import { Bot, Settings, HelpCircle, LayoutDashboard, ListTodo, ChevronLeft, ChevronRight, Users, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [view, setView] = useState<ViewState>('dashboard');
@@ -18,6 +20,28 @@ export default function App() {
   const [reasoningSteps, setReasoningSteps] = useState<any[]>([]);
   const [executionDay, setExecutionDay] = useState<number>(0);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [audiences, setAudiences] = useState<Audience[]>([
+    { id: 'audience_20241111_bag_intent', name: '双十一手袋高意向人群', description: '近 90 天浏览手袋 ≥3 次 OR 加心愿单(手袋) OR 加购(手袋)', count: 45230, updateTime: '2024-10-25 10:00', status: 'active' },
+    { id: 'audience_cny2025_gift', name: '春节礼品购买潜力', description: 'tag_gift_buyer + 近 30 天活跃', count: 23100, updateTime: '2024-10-24 14:30', status: 'active' },
+    { id: 'audience_dormant_q1', name: 'Q1 高价值沉睡召回', description: 'tag_dormant_180d + LTV > 10,000', count: 18450, updateTime: '2024-10-20 09:15', status: 'active' },
+    { id: 'audience_vip_upgrade_plat', name: '金卡→白金升级冲刺', description: 'tag_upgrade_potential_platinum + 近 6 月购 ≥2 次', count: 8320, updateTime: '2024-10-18 16:45', status: 'active' },
+    { id: 'audience_shoes_24aw', name: '鞋履 24 秋冬新季', description: 'preferred_category=鞋履 OR 近 6 月购鞋 ≥1 次', count: 31200, updateTime: '2024-10-15 11:20', status: 'active' },
+  ]);
+
+  // Simulate audience calculation completion
+  useEffect(() => {
+    const calculatingAudiences = audiences.filter(a => a.status === 'calculating');
+    if (calculatingAudiences.length > 0) {
+      const timers = calculatingAudiences.map(audience => {
+        return setTimeout(() => {
+          setAudiences(prev => prev.map(a => 
+            a.id === audience.id ? { ...a, status: 'active' } : a
+          ));
+        }, 5000); // Simulate 5 seconds calculation time
+      });
+      return () => timers.forEach(clearTimeout);
+    }
+  }, [audiences]);
 
   const renderView = () => {
     if (view === 'strategy-review' && strategy) {
@@ -42,6 +66,10 @@ export default function App() {
           return <ExecutionDashboard setView={setView} initialDay={executionDay} />;
         case 'execution-report':
           return <ReportDashboard setView={setView} />;
+        case 'audience-list':
+          return <AudienceList setView={setView} audiences={audiences} />;
+        case 'smart-audience-assistant':
+          return <SmartAudienceAssistant setView={setView} setAudiences={setAudiences} />;
         default:
           return <Dashboard setView={setView} setStrategy={setStrategy} setExecutionDay={setExecutionDay} />;
       }
@@ -96,10 +124,18 @@ export default function App() {
               <button 
                 onClick={() => setView('dashboard')}
                 className={`w-full flex items-center ${isSidebarExpanded ? 'px-3' : 'justify-center'} py-2.5 text-sm font-medium rounded-lg transition-colors ${['dashboard', 'lifecycle-select', 'lifecycle-brief', 'ai-reasoning', 'adhoc-brief'].includes(view) ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                title={!isSidebarExpanded ? "智能营销工作台" : undefined}
+                title={!isSidebarExpanded ? "智能营销活动" : undefined}
               >
                 <LayoutDashboard className={`w-5 h-5 ${isSidebarExpanded ? 'mr-3' : ''} ${['dashboard', 'lifecycle-select', 'lifecycle-brief', 'ai-reasoning', 'adhoc-brief'].includes(view) ? 'text-blue-600' : 'text-slate-400'}`} />
-                {isSidebarExpanded && <span>智能营销工作台</span>}
+                {isSidebarExpanded && <span>智能营销活动</span>}
+              </button>
+              <button 
+                onClick={() => setView('smart-audience-assistant')}
+                className={`w-full flex items-center ${isSidebarExpanded ? 'px-3' : 'justify-center'} py-2.5 text-sm font-medium rounded-lg transition-colors ${['smart-audience-assistant'].includes(view) ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                title={!isSidebarExpanded ? "智能人群助手" : undefined}
+              >
+                <Sparkles className={`w-5 h-5 ${isSidebarExpanded ? 'mr-3' : ''} ${['smart-audience-assistant'].includes(view) ? 'text-blue-600' : 'text-slate-400'}`} />
+                {isSidebarExpanded && <span>智能人群助手</span>}
               </button>
               <button 
                 onClick={() => setView('campaign-list')}
@@ -108,6 +144,14 @@ export default function App() {
               >
                 <ListTodo className={`w-5 h-5 ${isSidebarExpanded ? 'mr-3' : ''} ${['campaign-list', 'execution-running', 'execution-report'].includes(view) ? 'text-blue-600' : 'text-slate-400'}`} />
                 {isSidebarExpanded && <span>营销活动列表</span>}
+              </button>
+              <button 
+                onClick={() => setView('audience-list')}
+                className={`w-full flex items-center ${isSidebarExpanded ? 'px-3' : 'justify-center'} py-2.5 text-sm font-medium rounded-lg transition-colors ${['audience-list'].includes(view) ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                title={!isSidebarExpanded ? "人群列表" : undefined}
+              >
+                <Users className={`w-5 h-5 ${isSidebarExpanded ? 'mr-3' : ''} ${['audience-list'].includes(view) ? 'text-blue-600' : 'text-slate-400'}`} />
+                {isSidebarExpanded && <span>人群列表</span>}
               </button>
             </nav>
           </div>
